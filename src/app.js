@@ -16,6 +16,20 @@ app.use(express.static("public")) // To help save some data in a folder named pu
 app.use(cookieParser());  // Perform CRUD Operation in the users browser
 
 
+// Routes
+import userRouter from './routes/user.routes.js';
+
+app.get("/",(req,res)=>{
+    res.send('Hello World');
+})
+app.get("/api/v2/user",(req,res)=>{
+    res.json({
+        message:"Hello G"
+    })
+})
+app.use("/api/v2/users",userRouter);
+
+
 
 
 export {app};
