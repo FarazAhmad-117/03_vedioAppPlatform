@@ -27,6 +27,7 @@ app.get("/api/v2/user",(req,res)=>{
         message:"Hello G"
     })
 })
+
 app.use("/api/v2/users",userRouter);
 
 
