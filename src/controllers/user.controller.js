@@ -192,7 +192,7 @@ export const refreshAccessToken = asyncHandler(async(req,res)=>{
 // Change current password:
 export const changeCurrentPassword = asyncHandler(async(req,res)=>{
     const {oldPassword,newPassword} = req.body;
-    const user =await User.findById(req.user?.id);
+    const user =await User.findById(req.user?._id);
     const isCorrect =await user.isPasswordCorrect(oldPassword);
     if(!isCorrect){
         throw new ApiError(400,'Invalid old Password');
@@ -220,6 +220,31 @@ export const getUser = asyncHandler(async(req,res)=>{
     },"User Data Found"));
 })
 
+
+// Function to update Account Details
+export const updateAccountDetails = asyncHandler(async(req,res)=>{
+    const {fullName,email} = req.body;
+    const user =await User.findOneAndUpdate(req.user?._id,
+        {
+            $set:{
+                fullName,
+                email
+            }
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshToken");
+    if(!user){
+        throw new ApiError(404,"User Not Found");
+    }
+    res.status(200)
+    .json(new ApiResponse(
+        200,
+        user,
+        "Details Updated Successfully"
+    ));
+})
 
 
 
