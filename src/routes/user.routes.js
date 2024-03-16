@@ -1,8 +1,11 @@
 import {Router} from 'express'
-import { registerUser } from '../controllers/user.controller.js';
+import { login, logout, registerUser } from '../controllers/user.controller.js';
 import {upload} from './../middlewares/multer.middleware.js'; 
+import { verifyJWT } from '../middlewares/auth.middleware.js';
 
 const router = Router();
+
+// All Routers Listenting at /api/v2/users;
 
 router.route("/register").post(
     upload.fields([   // multer midleware
@@ -17,6 +20,11 @@ router.route("/register").post(
     ]),
     registerUser
 );
+
+router.route("/login").post(login);
+router.route("/logout").post(verifyJWT,logout);
+
+
 
 
 
