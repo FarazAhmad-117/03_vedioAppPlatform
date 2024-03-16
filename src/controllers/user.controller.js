@@ -320,6 +320,82 @@ export const updateUserCoverImage = asyncHandler(async(req,res)=>{
 })
 
 
+// Each User must have a channel and also a count for subscribers and subscriptions
+// I am going to take these details from subscription collection and then perform agregation pipeline
+// to get details of channel
+
+export const getUserChannelProfile = asyncHandler(async(req,res)=>{
+    const { username } = req.params;
+    if(!username?.trim()){
+        throw new ApiError(400,"Username is missing");
+    }
+    const channel = await User.aggregate([
+        // First pipeline
+        {
+            $match:{          // This must be the the username of the channel some user is looking at
+                username:username?.toLowerCase()
+            }
+        },
+        {
+            $lookup:{        // We are looking for the subscribers of that channel
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"channel",
+                as:"subscribers"
+            }
+        },
+        {
+            $lookup:{       // We are looking fro the subscribes by that channel
+                from:"subscriptions",
+                localField:"_id",
+                foreignField:"subscriber",
+                as:"subscribedTo"
+            }
+        },
+        {
+            $addFields:{      // Now we are adding the data fields in to the Channel Details
+                subscribersCount:{
+                    $size:"$subscribers"
+                },
+                channelsSubscribedToCount:{
+                    $size:"$subscribedTo"
+                },
+                isSubscribed:{
+                    $cond:{             // Checking if the user looking for that channel is a subscriber or not
+                        if:{$in: [req.user?._id, "$subscribers.subscribe"]}, // checks if first one is present in second
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{ // Telling them which fields are we going to add
+                fullName:1,
+                username:1,
+                subscribersCount:1,
+                channelsSubscribedToCount:1,
+                isSubscribed:1,
+                avatar:1,
+                coverImage:1,
+                email:1,
+                createdAt:1
+            }
+        }
+    ]);
+
+    if(!channel){
+        throw new ApiError(404,"Channel Does Not Exists");
+    }
+
+    res
+    .status(200)
+    .json(new ApiResponse(
+        200,
+        channel[0],
+        "User Fetched Successfully"
+    ));
+})
 
 
 

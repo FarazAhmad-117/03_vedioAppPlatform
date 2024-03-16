@@ -1,5 +1,5 @@
 import {Router} from 'express'
-import { changeCurrentPassword, getUser, login, logout, refreshAccessToken, registerUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage } from '../controllers/user.controller.js';
+import { changeCurrentPassword, getUser, getUserChannelProfile, login, logout, refreshAccessToken, registerUser, updateAccountDetails, updateUserAvatar, updateUserCoverImage } from '../controllers/user.controller.js';
 import {upload} from './../middlewares/multer.middleware.js'; 
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import multer from 'multer';
@@ -50,6 +50,10 @@ router.route("/update-coverimage").post(
         }
     ]),
     updateUserCoverImage
+)
+router.route("/getchannel").get(
+    verifyJWT,
+    getUserChannelProfile
 )
 
 
