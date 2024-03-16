@@ -28,7 +28,14 @@ const userSchema = new Schema({
         type:String, // cloudnary url
         required:true
     },
+    avatarId:{
+        type:String, // cloudnary image id to delete
+        required:true
+    },
     coverImage:{
+        type:String,
+    },
+    coverImageId:{
         type:String,
     },
     watchHistory:[

@@ -70,8 +70,10 @@ export const registerUser = asyncHandler( async(req,res)=>{
         username: username.toLowerCase(),
         email,
         fullName,
-        avatar:avatar.secure_url,
-        coverImage:coverImage?.secure_url || "",
+        avatar:avatar.url,
+        avatarId:avatar.public_id,
+        coverImage:coverImage?.url || "",
+        coverImageId:coverImage.public_id || "",
         password
     })
 
@@ -244,6 +246,39 @@ export const updateAccountDetails = asyncHandler(async(req,res)=>{
         user,
         "Details Updated Successfully"
     ));
+})
+
+// Updating files
+export const updateUserAvatar = asyncHandler(async(req,res)=>{
+    const avatarLocalPath = req.files?.avatar[0]?.path; // file not files because just taking a single file
+    if(!avatarLocalPath){
+        throw new ApiError(400,"Avatar file required");
+    }
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    if(!avatar){
+        throw new ApiError(500,"Avatar file could not be uploaded");
+    }
+    deleteLocalFile(avatarLocalPath);
+    await deleteFromCloudinary(req.user?.avatarId);
+    const updatedUser = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                avatar:avatar.url,
+                avatarId:avatar.public_id
+            }
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshToken");
+
+    if(!updatedUser){
+        throw new ApiError(500,"Could not update User");
+    }
+    res
+    .status(200)
+    .json(new ApiResponse(200,{user:updatedUser},"Avatar Updated Successfully"));
 })
 
 
