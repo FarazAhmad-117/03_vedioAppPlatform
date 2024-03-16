@@ -259,7 +259,7 @@ export const updateUserAvatar = asyncHandler(async(req,res)=>{
         throw new ApiError(500,"Avatar file could not be uploaded");
     }
     deleteLocalFile(avatarLocalPath);
-    await deleteFromCloudinary(req.user?.avatarId);
+    const oldImgId = req.user?.avatarId;
     const updatedUser = await User.findByIdAndUpdate(
         req.user?._id,
         {
@@ -272,6 +272,44 @@ export const updateUserAvatar = asyncHandler(async(req,res)=>{
             new:true
         }
     ).select("-password -refreshToken");
+    await deleteFromCloudinary(oldImgId);
+        
+    if(!updatedUser){
+        throw new ApiError(500,"Could not update User");
+    }
+    res
+    .status(200)
+    .json(new ApiResponse(200,{user:updatedUser},"Avatar Updated Successfully"));
+})
+
+
+
+
+// Updating files
+export const updateUserCoverImage = asyncHandler(async(req,res)=>{
+    const coverImageLocalPath = req.files?.coverImage[0]?.path; // file not files because just taking a single file
+    if(!coverImageLocalPath){
+        throw new ApiError(400,"Avatar file required");
+    }
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+    if(!coverImage){
+        throw new ApiError(500,"Avatar file could not be uploaded");
+    }
+    deleteLocalFile(coverImageLocalPath);
+    const oldImgId = req.user?.coverImageId;
+    const updatedUser = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set:{
+                coverImage:coverImage.url,
+                coverImageId:coverImage.public_id
+            }
+        },
+        {
+            new:true
+        }
+    ).select("-password -refreshToken");
+    await deleteFromCloudinary(oldImgId);
 
     if(!updatedUser){
         throw new ApiError(500,"Could not update User");
